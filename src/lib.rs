@@ -1,5 +1,8 @@
+pub mod simple_cache;
+
 use async_trait::async_trait;
-use std::hash::hash;
+use std::hash::Hash;
+use std::fmt::Debug;
 
 pub trait CacheKey:
     Hash + Eq + Send + Sync + Clone + Debug + 'static
@@ -23,5 +26,5 @@ where
 pub trait Cache<K: CacheKey,V: CacheValue> {
     async fn get(&self, key: &K) -> Option<V>;
     async fn set(&self, key: K, value: V) -> Option<V>;
-    async fn reove(&self, key: &K) -> Option<V>;
+    async fn remove(&self, key: &K) -> Option<V>;
 }
