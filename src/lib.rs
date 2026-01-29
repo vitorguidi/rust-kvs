@@ -1,4 +1,5 @@
 pub mod simple_cache;
+pub mod lrucache;
 
 use async_trait::async_trait;
 use std::hash::Hash;
