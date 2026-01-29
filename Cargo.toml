@@ -8,3 +8,11 @@ bytes = "1.0"
 async-trait = "0.1"
 tokio = {version = "1", features = ["full"]}
 lru = "0.12"
+
+[dev-dependencies]
+criterion = { version = "0.5", features = ["async_tokio"] }
+tokio = { version = "1", features = ["full", "test-util"] }
+
+[[bench]]
+name = "local_cache_bench"
+harness = false

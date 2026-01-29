@@ -53,8 +53,6 @@ where
 
 #[cfg(test)]
 mod tests {
-    use std::num::NonZero;
-
     use super::*;
 
     #[tokio::test]
