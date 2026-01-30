@@ -1,6 +1,7 @@
 pub mod simple_cache;
 pub mod lrucache;
 pub mod ttlcache;
+pub mod bytestore;
 
 use async_trait::async_trait;
 use std::hash::Hash;
