@@ -14,6 +14,6 @@ pub async fn main() -> std::io::Result<()> {
         }
     });
     println!("Starting server.");
-    run_server(cache).await?;
+    run_server(cache, 20).await?;
     Ok(())
 }

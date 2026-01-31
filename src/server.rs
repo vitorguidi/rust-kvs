@@ -1,26 +1,41 @@
 use futures::{SinkExt, StreamExt};
+use tokio::sync::Semaphore;
 use std::io::Result;
 use std::time::Duration;
+use std::sync::Arc;
 use tokio::net::{TcpListener, TcpStream};
 use tokio_util::codec::Framed;
 
 use crate::cache::ByteCache;
 use crate::protocol::{CacheCodec, Command, Response};
 
-pub async fn run_server(cache: ByteCache<String>) -> Result<()> {
+
+pub async fn run_server(
+    cache: ByteCache<String>,
+    max_connections: usize
+) -> Result<()> {
     let listener = TcpListener::bind("127.0.0.1:6379").await?;
     println!("Listening on 127.0.0.1:6379");
+    let limit = Arc::new(Semaphore::new(max_connections));
     loop {
+        let permit = match limit.clone().acquire_owned().await {
+            Ok(p) => p,
+            Err(_) => {
+                break;
+            }
+        };
         let (socket, addr) = listener.accept().await?;
         println!("Accepted connection from: {}", addr);
         let cache_handle = cache.clone();
 
         tokio::spawn(async move {
+            let _permit = permit;
             if let Err(e) = process(socket, cache_handle).await {
                 eprintln!("Error processing client {}: {:?}", addr, e);
             }
         });
     }
+    Ok(())
 }
 
 pub async fn process(
