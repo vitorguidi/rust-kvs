@@ -60,6 +60,7 @@ pub async fn process(
                         Response::Ok
                     }
                 };
+                println!("Replying: {:?}", response);
                 if let Err(e) = framed.send(response).await {
                     return Err(e);
                 }
