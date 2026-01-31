@@ -1,4 +1,5 @@
 use rust_kvs::{ByteCache, run_server};
+use tokio::net::TcpListener;
 
 #[tokio::main]
 pub async fn main() -> std::io::Result<()> {
@@ -14,6 +15,8 @@ pub async fn main() -> std::io::Result<()> {
         }
     });
     println!("Starting server.");
-    run_server(cache, 20).await?;
+    let listener = TcpListener::bind("127.0.0.1:6379").await?;
+    println!("Listening on 127.0.0.1:6379");
+    run_server(cache, listener, 20).await?;
     Ok(())
 }

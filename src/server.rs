@@ -12,10 +12,9 @@ use crate::protocol::{CacheCodec, Command, Response};
 
 pub async fn run_server(
     cache: ByteCache<String>,
+    listener: TcpListener,
     max_connections: usize
 ) -> Result<()> {
-    let listener = TcpListener::bind("127.0.0.1:6379").await?;
-    println!("Listening on 127.0.0.1:6379");
     let limit = Arc::new(Semaphore::new(max_connections));
     loop {
         let permit = match limit.clone().acquire_owned().await {
