@@ -1,5 +1,4 @@
-use rust_kvs::bytestore::ByteCache;
-use rust_kvs::server::run_server;
+use rust_kvs::{ByteCache, run_server};
 
 #[tokio::main]
 pub async fn main() -> std::io::Result<()> {

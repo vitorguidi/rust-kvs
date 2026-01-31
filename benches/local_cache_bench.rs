@@ -1,8 +1,14 @@
-use criterion::{criterion_group, criterion_main, Criterion, BenchmarkId};
-use tokio::runtime::Runtime;
+use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion};
+use rkyv::AlignedVec;
+use rust_kvs::ByteCache;
 use std::sync::Arc;
-// Assuming these are available in your crate root or module
-use rust_kvs::bytestore::{ByteCache, to_bytes}; 
+use tokio::runtime::Runtime;
+
+fn to_aligned_vec(s: &str) -> AlignedVec {
+    let mut vec = AlignedVec::new();
+    vec.extend_from_slice(s.as_bytes());
+    vec
+}
 
 fn generate_data(count: usize) -> Vec<(String, String)> {
     (0..count)
@@ -15,10 +21,9 @@ fn bench_reads(c: &mut Criterion) {
     let cache = ByteCache::<String>::new();
     let data = generate_data(1000);
 
-    // Sync calls: No .await needed
     for (k, v) in &data {
-        let bytes = to_bytes(v); // Convert String to AlignedVec
-        cache.set(k.clone(), bytes, None); // Added None for TTL
+        let bytes = to_aligned_vec(v);
+        cache.set(k.clone(), bytes, None);
     }
 
     let cache = Arc::new(cache);
@@ -30,18 +35,15 @@ fn bench_reads(c: &mut Criterion) {
             let cache_ref = cache.clone();
             let key = "key_500".to_string();
 
-            // iter() can still be async if the bench framework requires it,
-            // but the internal call is now sync.
             b.to_async(&rt).iter(|| async {
-                let _ = cache_ref.get(&key); // Removed .await
+                let _ = cache_ref.get(&key);
             })
-        }
+        },
     );
 }
 
 fn bench_mixed_workload(c: &mut Criterion) {
     let rt = Runtime::new().unwrap();
-    // Fixed: Only one generic argument <String>
     let cache = Arc::new(ByteCache::<String>::new());
 
     let mut group = c.benchmark_group("contention");
@@ -58,11 +60,9 @@ fn bench_mixed_workload(c: &mut Criterion) {
                         handles.push(tokio::spawn(async move {
                             let k = format!("key_{}", i);
                             if i % 10 == 0 {
-                                let val = to_bytes(&"new_val".to_string());
-                                // Removed .await and added None
+                                let val = to_aligned_vec("new_val");
                                 c_clone.set(k, val, None);
                             } else {
-                                // Removed .await
                                 let _ = c_clone.get(&k);
                             }
                         }));
@@ -71,16 +71,12 @@ fn bench_mixed_workload(c: &mut Criterion) {
                         let _ = h.await;
                     }
                 })
-            }
+            },
         );
     }
     group.finish();
 }
 
-criterion_group!(
-    benches,
-    bench_reads,
-    bench_mixed_workload
-);
+criterion_group!(benches, bench_reads, bench_mixed_workload);
 
 criterion_main!(benches);

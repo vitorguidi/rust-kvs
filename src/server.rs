@@ -1,11 +1,11 @@
+use futures::{SinkExt, StreamExt};
+use std::io::Result;
+use std::time::Duration;
 use tokio::net::{TcpListener, TcpStream};
 use tokio_util::codec::Framed;
-use futures::{SinkExt, StreamExt};
-use std::sync::Arc;
-use std::time::Duration;
-use std::io::Result;
-use crate::bytestore::ByteCache;
-use crate::network::{CacheCodec, Command, Response};
+
+use crate::cache::ByteCache;
+use crate::protocol::{CacheCodec, Command, Response};
 
 pub async fn run_server(cache: ByteCache<String>) -> Result<()> {
     let listener = TcpListener::bind("127.0.0.1:6379").await?;
